@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Super Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .calculator {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 420px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input, select, button {
+      margin: 8px 0;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .memory-buttons button,
+    .theme-buttons button {
+      width: 24%;
+      margin: 2px 1%;
+      font-size: 14px;
+    }
+
+    #result {
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    #history {
+      margin-top: 20px;
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 5px;
+      height: 150px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+
+    .theme-buttons {
+      margin: 10px 0;
+      text-align: center;
+    }
+
+    .dark-mode {
+      background: #1f1f1f;
+      color: #ffffff;
+    }
+
+    .dark-mode .calculator {
+      background: #2c2c2c;
+      color: #ffffff;
+    }
+
+    .pink-mode {
+      background: #ffe6f0;
+      color: #800040;
+    }
+
+    .pink-mode .calculator {
+      background: #fff0f5;
+      color: #800040;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 5px;
+    }
+
+    @media screen and (max-width: 500px) {
+      .memory-buttons button, .theme-buttons button {
+        width: 48%;
+        margin: 2px 1%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <h2>Super Calculator</h2>
+
+    <select id="operation" onchange="toggleInputs()">
+      <option value="add">Add</option>
+      <option value="subtract">Subtract</option>
+      <option value="multiply">Multiply</option>
+      <option value="divide">Divide</option>
+      <option value="power">Power (x^y)</option>
+      <option value="modulus">Modulus (x % y)</option>
+      <option value="sqrt">Square Root</option>
+      <option value="abs">Absolute Value</option>
+      <option value="factorial">Factorial</option>
+      <option value="sin">Sine (°)</option>
+      <option value="cos">Cosine (°)</option>
+      <option value="tan">Tangent (°)</option>
+      <option value="log">Log base 10</option>
+      <option value="ln">Natural Log</option>
+      <option value="pi">Use Pi</option>
+      <option value="e">Use e</option>
+    </select>
+
+    <input type="number" id="num1" placeholder="Enter first number">
+    <input type="number" id="num2" placeholder="Enter second number">
+
+    <div class="memory-buttons">
+      <button onclick="memoryAdd()">M+</button>
+      <button onclick="memorySubtract()">M-</button>
+      <button onclick="memoryRecall()">MR</button>
+      <button onclick="memoryClear()">MC</button>
+    </div>
+
+    <button onclick="calculate()">Calculate</button>
+    <button onclick="clearInputs()">Clear</button>
+
+    <div id="result">Result: </div>
+
+    <div class="theme-buttons">
+      <button onclick="setTheme('light')">Light</button>
+      <button onclick="setTheme('dark')">Dark</button>
+      <button onclick="setTheme('pink')">Pink</button>
+    </div>
+
+    <button onclick="exportHistory()">Export History</button>
+
+    <div id="history">
+      <strong>History:</strong>
+      <div id="history-content"></div>
+    </div>
+  </div>
+
+  <script>
+    let memory = 0;
+
+    function toggleInputs() {
+      const op = document.getElementById("operation").value;
+      const num1 = document.getElementById("num1");
+      const num2 = document.getElementById("num2");
+
+      if (["add", "subtract", "multiply", "divide", "power", "modulus"].includes(op)) {
+        num1.style.display = "block";
+        num2.style.display = "block";
+      } else if (["pi", "e"].includes(op)) {
+        num1.style.display = "none";
+        num2.style.display = "none";
+      } else {
+        num1.style.display = "block";
+        num2.style.display = "none";
+      }
+    }
+
+    function calculate() {
+      const op = document.getElementById("operation").value;
+      const num1Val = parseFloat(document.getElementById("num1").value);
+      const num2Val = parseFloat(document.getElementById("num2").value);
+      let result;
+      let expression = "";
+
+      switch (op) {
+        case "add": result = num1Val + num2Val; expression = `${num1Val} + ${num2Val}`; break;
+        case "subtract": result = num1Val - num2Val; expression = `${num1Val} - ${num2Val}`; break;
+        case "multiply": result = num1Val * num2Val; expression = `${num1Val} × ${num2Val}`; break;
+        case "divide":
+          result = num2Val === 0 ? "Cannot divide by zero" : num1Val / num2Val;
+          expression = `${num1Val} ÷ ${num2Val}`; break;
+        case "power": result = Math.pow(num1Val, num2Val); expression = `${num1Val} ^ ${num2Val}`; break;
+        case "modulus": result = num1Val % num2Val; expression = `${num1Val} % ${num2Val}`; break;
+        case "sqrt": result = num1Val < 0 ? "Invalid input" : Math.sqrt(num1Val); expression = `√(${num1Val})`; break;
+        case "abs": result = Math.abs(num1Val); expression = `|${num1Val}|`; break;
+        case "factorial":
+          if (num1Val < 0 || !Number.isInteger(num1Val)) result = "Invalid input";
+          else { result = 1; for (let i = 2; i <= num1Val; i++) result *= i; }
+          expression = `${num1Val}!`; break;
+        case "sin": result = Math.sin(num1Val * Math.PI / 180).toFixed(6); expression = `sin(${num1Val}°)`; break;
+        case "cos": result = Math.cos(num1Val * Math.PI / 180).toFixed(6); expression = `cos(${num1Val}°)`; break;
+        case "tan": result = Math.tan(num1Val * Math.PI / 180).toFixed(6); expression = `tan(${num1Val}°)`; break;
+        case "log": result = num1Val <= 0 ? "Invalid input" : Math.log10(num1Val).toFixed(6); expression = `log(${num1Val})`; break;
+        case "ln": result = num1Val <= 0 ? "Invalid input" : Math.log(num1Val).toFixed(6); expression = `ln(${num1Val})`; break;
+        case "pi": result = Math.PI.toFixed(15); expression = "π"; break;
+        case "e": result = Math.E.toFixed(15); expression = "e"; break;
+        default: result = "Unknown operation";
+      }
+
+      document.getElementById("result").innerText = "Result: " + result;
+
+      if (!["Invalid input", "Cannot divide by zero", "Unknown operation"].includes(result)) {
+        addToHistory(`${expression} = ${result}`);
+      }
+    }
+
+    function clearInputs() {
+      document.getElementById("num1").value = '';
+      document.getElementById("num2").value = '';
+      document.getElementById("result").innerText = 'Result:';
+    }
+
+    function addToHistory(entry) {
+      const history = document.getElementById("history-content");
+      const line = document.createElement("div");
+      line.textContent = entry;
+      history.prepend(line);
+    }
+
+    function memoryAdd() {
+      const current = getCurrentResult();
+      if (!isNaN(current)) {
+        memory += current;
+        alert("Added to memory: " + memory);
+      }
+    }
+
+    function memorySubtract() {
+      const current = getCurrentResult();
+      if (!isNaN(current)) {
+        memory -= current;
+        alert("Subtracted from memory: " + memory);
+      }
+    }
+
+    function memoryRecall() {
+      alert("Memory recall: " + memory);
+      document.getElementById("num1").value = memory;
+    }
+
+    function memoryClear() {
+      memory = 0;
+      alert("Memory cleared");
+    }
+
+    function getCurrentResult() {
+      const resultText = document.getElementById("result").innerText;
+      const value = parseFloat(resultText.split(":")[1]);
+      return isNaN(value) ? 0 : value;
+    }
+
+    function setTheme(mode) {
+      document.body.classList.remove("dark-mode", "pink-mode");
+      if (mode === "dark") document.body.classList.add("dark-mode");
+      else if (mode === "pink") document.body.classList.add("pink-mode");
+    }
+
+    function exportHistory() {
+      const content = Array.from(document.getElementById("history-content").children)
+        .map(line => line.textContent).join('\n');
+      const blob = new Blob([content], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "calculator-history.txt";
+      a.click();
+    }
+
+    toggleInputs();
+  </script>
+</body>
+</html>
